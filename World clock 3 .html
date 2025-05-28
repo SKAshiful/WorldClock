@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Clock by Ashiful</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #fff;
+      font-weight: 600;
+      font-size: 2.5em;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 30px;
+      padding: 20px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .search-bar input[type="text"] {
+      padding: 12px 15px;
+      width: 100%;
+      max-width: 450px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .search-bar input[type="text"]:focus {
+      border-color: #764ba2;
+      box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.25);
+      outline: none;
+    }
+    .format-toggle button {
+      padding: 10px 18px;
+      font-size: 15px;
+      border: none;
+      background-color: #fff;
+      color: #764ba2;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: background-color 0.3s, color 0.3s, transform 0.2s;
+    }
+    .format-toggle button:hover {
+      background-color: #f0e9f7;
+      transform: translateY(-1px);
+    }
+    .user-time {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 1.1em;
+      color: #fff;
+      background-color: rgba(0,0,0,0.2);
+      padding: 10px;
+      border-radius: 8px;
+      display: inline-block;
+    }
+    .user-time-container {
+        text-align: center;
+    }
+
+    .clock-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      justify-content: center;
+    }
+    .clock {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: transform 0.3s ease, background 0.5s ease;
+      overflow: hidden;
+    }
+    .clock:hover {
+        transform: translateY(-5px);
+    }
+
+    /* Time of Day Styling */
+    .clock.morning { background: linear-gradient(135deg, #FFDEE9 0%, #B5FFFC 100%); }
+    .clock.day { background: linear-gradient(135deg, #A1C4FD 0%, #C2E9FB 100%); }
+    .clock.evening { background: linear-gradient(135deg, #FFCF71 0%, #FF9A9E 100%); } /* Adjusted evening gradient */
+    .clock.night { background: linear-gradient(135deg, #0F2027 0%, #203A43 50%, #2C5364 100%); color: #f0f0f0; }
+    .clock.night h3, .clock.night .weather, .clock.night .time { color: #e0e0e0; }
+
+
+    .clock h3 {
+      margin: 0 0 12px;
+      font-size: 1.4em;
+      font-weight: 600;
+      color: #333;
+    }
+    .clock .time {
+      font-size: 2.2em; /* Slightly larger time */
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #555;
+    }
+    .weather {
+      font-size: 0.95em;
+      color: #555;
+      line-height: 1.6;
+    }
+    .weather-icon {
+        font-size: 1.5em;
+        margin-bottom: 5px;
+    }
+    #loadingIndicator {
+        text-align: center;
+        padding: 20px;
+        font-size: 1.2em;
+        color: white;
+        display: none; /* Hidden by default */
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 2em; }
+      .controls { padding: 15px; }
+      .search-bar input[type="text"] { font-size: 15px; padding: 10px 12px;}
+      .format-toggle button { font-size: 14px; padding: 8px 15px;}
+      .clock { padding: 15px; }
+      .clock h3 { font-size: 1.2em; }
+      .clock .time { font-size: 1.8em; }
+      .weather { font-size: 0.9em; }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>World Clock Pro</h1>
+
+    <div class="controls">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search city, country, or timezone...">
+      </div>
+      <div class="format-toggle">
+        <button id="formatToggleButton">Switch to 24H</button>
+      </div>
+    </div>
+    <div class="user-time-container">
+        <div class="user-time" id="userTime">Loading your time...</div>
+    </div>
+
+
+    <div class="clock-grid" id="clockGrid"></div>
+    <div id="loadingIndicator">Loading more cities...</div>
+
+  </div>
+
+  <script>
+    // Master list of all timezones
+    const masterTimeZones = [
+      // Original + Expanded
+      { label: "New York, USA", zone: "America/New_York", lat: 40.7128, lon: -74.0060 },
+      { label: "London, UK", zone: "Europe/London", lat: 51.5072, lon: -0.1276 },
+      { label: "Paris, France", zone: "Europe/Paris", lat: 48.8566, lon: 2.3522 },
+      { label: "Berlin, Germany", zone: "Europe/Berlin", lat: 52.52, lon: 13.405 },
+      { label: "Moscow, Russia", zone: "Europe/Moscow", lat: 55.7558, lon: 37.6173 },
+      { label: "Dubai, UAE", zone: "Asia/Dubai", lat: 25.276987, lon: 55.296249 },
+      { label: "Mumbai, India", zone: "Asia/Kolkata", lat: 19.0760, lon: 72.8777 },
+      { label: "Delhi, India", zone: "Asia/Kolkata", lat: 28.7041, lon: 77.1025 },
+      { label: "Beijing, China", zone: "Asia/Shanghai", lat: 39.9042, lon: 116.4074 },
+      { label: "Shanghai, China", zone: "Asia/Shanghai", lat: 31.2304, lon: 121.4737 },
+      { label: "Tokyo, Japan", zone: "Asia/Tokyo", lat: 35.6895, lon: 139.6917 },
+      { label: "Sydney, Australia", zone: "Australia/Sydney", lat: -33.8688, lon: 151.2093 },
+      { label: "Melbourne, Australia", zone: "Australia/Melbourne", lat: -37.8136, lon: 144.9631 },
+      { label: "San Francisco, USA", zone: "America/Los_Angeles", lat: 37.7749, lon: -122.4194 },
+      { label: "Los Angeles, USA", zone: "America/Los_Angeles", lat: 34.0522, lon: -118.2437 },
+      { label: "São Paulo, Brazil", zone: "America/Sao_Paulo", lat: -23.5505, lon: -46.6333 },
+      { label: "Rio de Janeiro, Brazil", zone: "America/Sao_Paulo", lat: -22.9068, lon: -43.1729 },
+      { label: "Cape Town, South Africa", zone: "Africa/Johannesburg", lat: -33.9249, lon: 18.4241 },
+      { label: "Johannesburg, South Africa", zone: "Africa/Johannesburg", lat: -26.2041, lon: 28.0473 },
+      { label: "Singapore", zone: "Asia/Singapore", lat: 1.3521, lon: 103.8198 },
+      { label: "Toronto, Canada", zone: "America/Toronto", lat: 43.6532, lon: -79.3832 },
+      { label: "Vancouver, Canada", zone: "America/Vancouver", lat: 49.2827, lon: -123.1207 },
+      { label: "Cairo, Egypt", zone: "Africa/Cairo", lat: 30.0444, lon: 31.2357 },
+      { label: "Nairobi, Kenya", zone: "Africa/Nairobi", lat: -1.2921, lon: 36.8219 },
+      { label: "Lagos, Nigeria", zone: "Africa/Lagos", lat: 6.5244, lon: 3.3792 },
+      { label: "Buenos Aires, Argentina", zone: "America/Argentina/Buenos_Aires", lat: -34.6037, lon: -58.3816 },
+      { label: "Mexico City, Mexico", zone: "America/Mexico_City", lat: 19.4326, lon: -99.1332 },
+      { label: "Chicago, USA", zone: "America/Chicago", lat: 41.8781, lon: -87.6298 },
+      { label: "Houston, USA", zone: "America/Chicago", lat: 29.7604, lon: -95.3698 },
+      { label: "Seoul, South Korea", zone: "Asia/Seoul", lat: 37.5665, lon: 126.9780 },
+      { label: "Bangkok, Thailand", zone: "Asia/Bangkok", lat: 13.7563, lon: 100.5018 },
+      { label: "Jakarta, Indonesia", zone: "Asia/Jakarta", lat: -6.2088, lon: 106.8456 },
+      { label: "Kuala Lumpur, Malaysia", zone: "Asia/Kuala_Lumpur", lat: 3.1390, lon: 101.6869 },
+      { label: "Ho Chi Minh City, Vietnam", zone: "Asia/Ho_Chi_Minh", lat: 10.7769, lon: 106.7009 },
+      { label: "Manila, Philippines", zone: "Asia/Manila", lat: 14.5995, lon: 120.9842 },
+      { label: "Istanbul, Turkey", zone: "Europe/Istanbul", lat: 41.0082, lon: 28.9784 },
+      { label: "Ankara, Turkey", zone: "Europe/Istanbul", lat: 39.9334, lon: 32.8663 },
+      { label: "Rome, Italy", zone: "Europe/Rome", lat: 41.9028, lon: 12.4964 },
+      { label: "Milan, Italy", zone: "Europe/Rome", lat: 45.4642, lon: 9.1900 },
+      { label: "Madrid, Spain", zone: "Europe/Madrid", lat: 40.4168, lon: -3.7038 },
+      { label: "Barcelona, Spain", zone: "Europe/Madrid", lat: 41.3851, lon: 2.1734 },
+      { label: "Auckland, New Zealand", zone: "Pacific/Auckland", lat: -36.8485, lon: 174.7633 },
+      { label: "Wellington, New Zealand", zone: "Pacific/Auckland", lat: -41.2865, lon: 174.7762 },
+      { label: "Perth, Australia", zone: "Australia/Perth", lat: -31.9523, lon: 115.8613 },
+      { label: "Honolulu, USA", zone: "Pacific/Honolulu", lat: 21.3069, lon: -157.8583 },
+      { label: "Anchorage, USA", zone: "America/Anchorage", lat: 61.2181, lon: -149.9003 },
+      { label: "Reykjavik, Iceland", zone: "Atlantic/Reykjavik", lat: 64.1466, lon: -21.9426 },
+      { label: "Dublin, Ireland", zone: "Europe/Dublin", lat: 53.3498, lon: -6.2603 },
+      { label: "Lisbon, Portugal", zone: "Europe/Lisbon", lat: 38.7223, lon: -9.1393 },
+      { label: "Amsterdam, Netherlands", zone: "Europe/Amsterdam", lat: 52.3676, lon: 4.9041 },
+      { label: "Brussels, Belgium", zone: "Europe/Brussels", lat: 50.8503, lon: 4.3517 },
+      { label: "Vienna, Austria", zone: "Europe/Vienna", lat: 48.2082, lon: 16.3738 },
+      { label: "Zurich, Switzerland", zone: "Europe/Zurich", lat: 47.3769, lon: 8.5417 },
+      { label: "Oslo, Norway", zone: "Europe/Oslo", lat: 59.9139, lon: 10.7522 },
+      { label: "Stockholm, Sweden", zone: "Europe/Stockholm", lat: 59.3293, lon: 18.0686 },
+      { label: "Copenhagen, Denmark", zone: "Europe/Copenhagen", lat: 55.6761, lon: 12.5683 },
+      { label: "Helsinki, Finland", zone: "Europe/Helsinki", lat: 60.1699, lon: 24.9384 },
+      { label: "Warsaw, Poland", zone: "Europe/Warsaw", lat: 52.2297, lon: 21.0122 },
+      { label: "Prague, Czech Republic", zone: "Europe/Prague", lat: 50.0755, lon: 14.4378 },
+      { label: "Budapest, Hungary", zone: "Europe/Budapest", lat: 47.4979, lon: 19.0402 },
+      { label: "Athens, Greece", zone: "Europe/Athens", lat: 37.9838, lon: 23.7275 },
+      { label: "Kiev, Ukraine", zone: "Europe/Kiev", lat: 50.4501, lon: 30.5234 }, // Note: Timezone may vary due to conflict
+      { label: "Bucharest, Romania", zone: "Europe/Bucharest", lat: 44.4268, lon: 26.1025 },
+      { label: "Santiago, Chile", zone: "America/Santiago", lat: -33.4489, lon: -70.6693 },
+      { label: "Lima, Peru", zone: "America/Lima", lat: -12.0464, lon: -77.0428 },
+      { label: "Bogotá, Colombia", zone: "America/Bogota", lat: 4.7110, lon: -74.0721 },
+      { label: "Caracas, Venezuela", zone: "America/Caracas", lat: 10.4806, lon: -66.9036 },
+      { label: "Riyadh, Saudi Arabia", zone: "Asia/Riyadh", lat: 24.7136, lon: 46.6753 },
+      { label: "Tehran, Iran", zone: "Asia/Tehran", lat: 35.6892, lon: 51.3890 },
+      { label: "Baghdad, Iraq", zone: "Asia/Baghdad", lat: 33.3152, lon: 44.3661 },
+      { label: "Karachi, Pakistan", zone: "Asia/Karachi", lat: 24.8607, lon: 67.0011 },
+      { label: "Dhaka, Bangladesh", zone: "Asia/Dhaka", lat: 23.8103, lon: 90.4125 },
+    ];
+
+    let currentSourceList = masterTimeZones; // The list currently being used (master or filtered)
+    let currentlyDisplayedTimeZones = [];
+    const itemsPerLoad = 15;
+    let itemsLoaded = 0;
+    let isLoading = false;
+
+
+    const weatherCache = {};
+    let use24HourFormat = false; // Default to AM/PM
+    const formatToggleButton = document.getElementById('formatToggleButton');
+    const searchInput = document.getElementById('searchInput');
+    const clockGrid = document.getElementById('clockGrid');
+    const userTimeDiv = document.getElementById('userTime');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+
+
+    const weatherDescriptions = {
+        0: { text: "Clear sky", icon: "☀️" }, 1: { text: "Mainly clear", icon: "🌤️" },
+        2: { text: "Partly cloudy", icon: "🌥️" }, 3: { text: "Overcast", icon: "☁️" },
+        45: { text: "Fog", icon: "🌫️" }, 48: { text: "Depositing rime fog", icon: "🌫️" },
+        51: { text: "Light drizzle", icon: "🌦️" }, 53: { text: "Moderate drizzle", icon: "🌦️" },
+        55: { text: "Dense drizzle", icon: "🌧️" }, 56: { text: "Light freezing drizzle", icon: "🌨️" },
+        57: { text: "Dense freezing drizzle", icon: "🌨️" }, 61: { text: "Light rain", icon: "🌦️" },
+        63: { text: "Moderate rain", icon: "🌧️" }, 65: { text: "Heavy rain", icon: "🌧️☔" },
+        66: { text: "Light freezing rain", icon: "🌨️" }, 67: { text: "Heavy freezing rain", icon: "🌨️☔" },
+        71: { text: "Light snow fall", icon: "🌨️" }, 73: { text: "Moderate snow fall", icon: "❄️" },
+        75: { text: "Heavy snow fall", icon: "❄️☃️" }, 77: { text: "Snow grains", icon: "🌨️" },
+        80: { text: "Light rain showers", icon: "🌦️" }, 81: { text: "Moderate rain showers", icon: "🌧️" },
+        82: { text: "Violent rain showers", icon: "🌧️☔" }, 85: { text: "Light snow showers", icon: "🌨️❄️" },
+        86: { text: "Heavy snow showers", icon: "❄️☃️" }, 95: { text: "Thunderstorm", icon: "⛈️" },
+        96: { text: "Thunderstorm, light hail", icon: "⛈️" }, 99: { text: "Thunderstorm, heavy hail", icon: "⛈️" },
+        default: { text: "Weather N/A", icon: "❓" }
+    };
+
+    function getWeatherInfo(code) {
+        return weatherDescriptions[code] || weatherDescriptions.default;
+    }
+
+    function toggleFormat() {
+      use24HourFormat = !use24HourFormat;
+      formatToggleButton.textContent = use24HourFormat ? 'Switch to AM/PM' : 'Switch to 24H';
+      renderClocks(currentlyDisplayedTimeZones); // Re-render existing clocks with new format
+      updateUserTimeDisplay(); // Update user time format
+    }
+
+    function fetchWeather(lat, lon, label) {
+      const cacheKey = `${lat},${lon}`; // Use lat,lon for cache key to avoid issues with label changes
+      if (weatherCache[cacheKey] && (Date.now() - weatherCache[cacheKey].timestamp < 600000)) { // Cache for 10 mins
+          return Promise.resolve(weatherCache[cacheKey]);
+      }
+
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode,wind_speed_10m,relative_humidity_2m&timezone=auto`;
+      return fetch(url)
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP error ${response.status} for ${label}`);
+            return response.json();
+        })
+        .then(data => {
+          if (data && data.current) {
+            weatherCache[cacheKey] = {
+              temp: data.current.temperature_2m,
+              wind: data.current.wind_speed_10m,
+              humidity: data.current.relative_humidity_2m,
+              code: data.current.weathercode,
+              timestamp: Date.now()
+            };
+            return weatherCache[cacheKey];
+          }
+          throw new Error("Weather data structure incorrect for " + label);
+        })
+        .catch(error => {
+          console.error("Error fetching weather for " + label + ":", error);
+          weatherCache[cacheKey] = { temp: "N/A", wind: "N/A", humidity: "N/A", code: 'default', timestamp: Date.now() };
+          return weatherCache[cacheKey]; // Return default even on error
+        });
+    }
+
+    function getTimeOfDayClass(timezone) {
+        const date = new Date();
+        const options = { timeZone: timezone, hour: 'numeric', hour12: false };
+        const currentHour = parseInt(new Intl.DateTimeFormat('en-US', options).format(date));
+
+        if (currentHour >= 5 && currentHour < 12) return 'morning';
+        if (currentHour >= 12 && currentHour < 18) return 'day';
+        if (currentHour >= 18 && currentHour < 22) return 'evening';
+        return 'night';
+    }
+
+    function createClockElement(tzData, weatherData) {
+        const timeOptions = {
+          timeZone: tzData.zone,
+          hour: '2-digit',
+          minute: '2-digit',
+          // No seconds: second: '2-digit',
+          hour12: !use24HourFormat
+        };
+        const timeString = new Date().toLocaleTimeString('en-US', timeOptions);
+        const weatherInfo = getWeatherInfo(weatherData.code);
+        const timeOfDayClass = getTimeOfDayClass(tzData.zone);
+
+        const div = document.createElement('div');
+        div.className = `clock ${timeOfDayClass}`;
+        div.innerHTML = `
+          <h3>${tzData.label}</h3>
+          <p class="time">${timeString}</p>
+          <div class="weather">
+            <div class="weather-icon">${weatherInfo.icon}</div>
+            ${weatherInfo.text}<br>
+            Temp: ${weatherData.temp !== "N/A" ? weatherData.temp + "°C" : "N/A"}<br>
+            Wind: ${weatherData.wind !== "N/A" ? weatherData.wind + " km/h" : "N/A"}<br>
+            Humidity: ${weatherData.humidity !== "N/A" ? weatherData.humidity + "%" : "N/A"}
+          </div>
+        `;
+        return div;
+    }
+
+    async function renderClocks(timeZoneBatch, append = false) {
+        if (!append) {
+            clockGrid.innerHTML = ''; // Clear for full re-render or new search
+        }
+
+        const weatherPromises = timeZoneBatch.map(tz => fetchWeather(tz.lat, tz.lon, tz.label));
+        const weatherResults = await Promise.all(weatherPromises);
+
+        timeZoneBatch.forEach((tz, index) => {
+            const clockElement = createClockElement(tz, weatherResults[index]);
+            clockGrid.appendChild(clockElement);
+        });
+    }
+
+    function updateUserTimeDisplay() {
+        const userTimeOptions = {
+            hour: '2-digit',
+            minute: '2-digit',
+            // No seconds: second: '2-digit',
+            hour12: !use24HourFormat
+        };
+        userTimeDiv.innerText = "Your Time: " + new Date().toLocaleTimeString('en-US', userTimeOptions);
+    }
+
+    async function loadMoreTimeZones(isInitialSearch = false) {
+        if (isLoading) return;
+        if (!isInitialSearch && itemsLoaded >= currentSourceList.length) {
+            loadingIndicator.style.display = 'none';
+            return;
+        }
+
+        isLoading = true;
+        loadingIndicator.style.display = 'block';
+
+        const batchToLoad = currentSourceList.slice(itemsLoaded, itemsLoaded + itemsPerLoad);
+        if (batchToLoad.length === 0 && !isInitialSearch) { // Nothing more to load from current source
+            loadingIndicator.style.display = 'none';
+            isLoading = false;
+            return;
+        }
+
+        await renderClocks(batchToLoad, !isInitialSearch && itemsLoaded > 0); // Append if not first load of a search/master
+        
+        itemsLoaded += batchToLoad.length;
+        currentlyDisplayedTimeZones = currentSourceList.slice(0, itemsLoaded); // Update the displayed list
+
+        loadingIndicator.style.display = 'none';
+        isLoading = false;
+
+        if (itemsLoaded >= currentSourceList.length) {
+            // console.log("All items from current source loaded.");
+        }
+    }
+    
+    function handleSearch() {
+        const searchTerm = searchInput.value.toLowerCase();
+        if (searchTerm) {
+            currentSourceList = masterTimeZones.filter(tz =>
+                tz.label.toLowerCase().includes(searchTerm) ||
+                tz.zone.toLowerCase().includes(searchTerm)
+            );
+        } else {
+            currentSourceList = masterTimeZones;
+        }
+        // Reset for new list (either filtered or back to master)
+        clockGrid.innerHTML = ''; // Clear grid before loading new search results
+        itemsLoaded = 0;
+        currentlyDisplayedTimeZones = [];
+        loadMoreTimeZones(true); // true indicates it's an initial load for this source list
+    }
+
+    // Update existing clocks' time and potentially weather every 10s
+    // This will re-fetch weather if cache expired, and re-render all visible clocks.
+    async function refreshDisplayedClocks() {
+        if (currentlyDisplayedTimeZones.length === 0) return; // Nothing to refresh
+
+        // We only re-render the currently visible set.
+        // Weather fetching is handled by createClockElement -> fetchWeather which uses cache.
+        const weatherPromises = currentlyDisplayedTimeZones.map(tz => fetchWeather(tz.lat, tz.lon, tz.label));
+        const weatherResults = await Promise.all(weatherPromises);
+        
+        clockGrid.innerHTML = ''; // Clear and re-render existing ones
+        currentlyDisplayedTimeZones.forEach((tz, index) => {
+            const clockElement = createClockElement(tz, weatherResults[index]);
+            clockGrid.appendChild(clockElement);
+        });
+
+        updateUserTimeDisplay();
+    }
+
+
+    // Event Listeners
+    formatToggleButton.addEventListener('click', toggleFormat);
+    searchInput.addEventListener('input', () => {
+        clearTimeout(window.searchTimeout);
+        window.searchTimeout = setTimeout(handleSearch, 300);
+    });
+
+    window.addEventListener('scroll', () => {
+        if (isLoading || itemsLoaded >= currentSourceList.length) return;
+
+        // Load more if scrolled near bottom
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200) {
+            loadMoreTimeZones();
+        }
+    });
+
+    // Initial Setup
+    updateUserTimeDisplay();
+    loadMoreTimeZones(true); // Initial load of first batch
+
+    setInterval(refreshDisplayedClocks, 30000); // Refresh times and weather (if needed) every 30s
+    // We removed the 10s interval for full update, relying on scroll for new items
+    // and the new 30s interval for refreshing data of already loaded items.
+
+  </script>
+</body>
+</html>
